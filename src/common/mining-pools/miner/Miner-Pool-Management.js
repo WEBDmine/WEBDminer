@@ -305,7 +305,7 @@ class MinerPoolManagement {
                 break;
         }
 
- oyMDUzoyMDUz return cryptoHex1;
+        return cryptoHex1;
     }
 }
 
