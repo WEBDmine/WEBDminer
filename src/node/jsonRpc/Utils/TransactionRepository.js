@@ -84,7 +84,7 @@ class TransactionRepository {
         });
 
         // find will return undefined in case the element is not found
-        if (typeof oTransaction !== 'undefined') {
+        if ( oTransaction !== undefined) {
             oTransaction.__nIndex = null;
             oTransaction.__oBlock = null;
             return oTransaction;
@@ -98,7 +98,7 @@ class TransactionRepository {
 
         const oBlock = await this._oBlockRepository.findByNumberOrTag(nBlockNumber);
 
-        if (oBlock === null) {
+        if ( !oBlock ) {
             return null;
         }
 
@@ -128,7 +128,7 @@ class TransactionRepository {
         const self = this;
 
         try {
-            return await self._oBlockchain.db.get('transactionID-' + sTransactionHash);
+            return await self._oBlockchain.blocks.loadingManager.getTxBlockHeight(sTransactionHash);
         }
         catch (e) {
             return null;

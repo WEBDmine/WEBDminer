@@ -167,7 +167,7 @@ class InterfaceBlockchainMiningBasic {
         this.started = false;
         StatusEvents.emit('mining/status-changed', false);
 
-        //this._destroyMiningInterval();
+        this._destroyMiningInterval();
     }
 
     resetMining(){

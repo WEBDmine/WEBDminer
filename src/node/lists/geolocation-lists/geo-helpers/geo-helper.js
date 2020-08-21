@@ -27,7 +27,7 @@ class GeoHelper {
         }
 
 
-        let result = {
+        const result = {
             country: '',
             countryCode: '',
             city: '',
@@ -54,8 +54,9 @@ class GeoHelper {
             }
 
             let list = [];
+             list.push("https://geoip-db.com/json/"+address);
             // list.push("https://ipstack.com/ipstack_api.php?ip="+address);
-            list.push("https://geo.xoip.ro/?address="+address); //@Sorin' version
+            //list.push("https://geo.xoip.ro/?address="+address); //@Sorin' version
             // list.push("https://geoip.tools/v1/json/?q="+address);
             // list.push ( ["https://geoip-db.com/json/"+address,  ]); //don't support domains
 
@@ -70,7 +71,7 @@ class GeoHelper {
                 result.country = data.country || data.country_name;
                 result.countryCode = data.countryCode || data.country_code;
 
-                if (address === '')
+                if ( !address )
                     if (data.query ) result.address = address || data.query;
 
                 if (result.countryCode )

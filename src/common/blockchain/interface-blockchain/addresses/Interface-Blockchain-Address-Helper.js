@@ -82,7 +82,7 @@ class InterfaceBlockchainAddressHelper{
 
         // Tutorial based on https://github.com/cryptocoinjs/secp256k1-node
 
-        if (privateKeyWIF === null || privateKeyWIF === undefined || !Buffer.isBuffer(privateKeyWIF) ){
+        if ( !privateKeyWIF || !Buffer.isBuffer(privateKeyWIF) ){
             console.error("ERROR! ",  privateKeyWIF, " is not a Buffer");
             throw {message: 'privateKeyWIF must be a Buffer', privateKeyWIF: privateKeyWIF};
         }
@@ -191,7 +191,7 @@ class InterfaceBlockchainAddressHelper{
             address = InterfaceBlockchainAddressHelper._generateAddressFromPublicKey(publicKey, false);
 
             try {
-                if (InterfaceBlockchainAddressHelper.getUnencodedAddressFromWIF(address.address) !== null)
+                if (InterfaceBlockchainAddressHelper.getUnencodedAddressFromWIF(address.address) )
                     invalidAddress = false;
             } catch (exception){
                 console.error("Address is invalid", address.address, address.address.length);
@@ -261,7 +261,7 @@ class InterfaceBlockchainAddressHelper{
      */
     static validatePrivateKeyWIF(privateKeyWIF){
 
-        if (privateKeyWIF === null || !Buffer.isBuffer(privateKeyWIF) ){
+        if ( !privateKeyWIF || !Buffer.isBuffer(privateKeyWIF) ){
             throw {message: 'privateKeyWIF must be a Buffer'};
         }
 
@@ -329,7 +329,7 @@ class InterfaceBlockchainAddressHelper{
      */
     static _validateAddressWIF(addressWIF){
 
-        if (addressWIF === null || !Buffer.isBuffer(addressWIF) ){
+        if ( !addressWIF  || !Buffer.isBuffer(addressWIF) ){
             throw { message: 'addressWIF must be a Buffer', addressWIF: addressWIF };
         }
 

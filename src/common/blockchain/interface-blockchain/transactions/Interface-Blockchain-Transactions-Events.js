@@ -130,7 +130,7 @@ class InterfaceBlockchainTransactionsEvents{
 
         //not working
         //TODO .eventNames() is not working
-        let list = this.emitter._events;
+        const list = this.emitter._emitter._events;
 
         for (let key in list)
             if (key === name)
@@ -142,7 +142,7 @@ class InterfaceBlockchainTransactionsEvents{
     async emitTransactionChangeEvent(transaction, deleted=false){
 
         if (deleted)
-            if (!await this.blockchain.mining.miningTransactionSelector.validateTransactionId(transaction.txId)) //I found a transaction already in Blockchain
+            if ( await this.blockchain.mining.miningTransactionSelector.validateTransactionId(transaction.txId) === false) //I found a transaction already in Blockchain
                 return false;
 
         transaction.from.addresses.forEach((address)=>{

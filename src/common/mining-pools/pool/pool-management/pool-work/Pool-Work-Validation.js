@@ -37,7 +37,9 @@ class PoolWorkValidation{
 
     async pushWorkForValidation(minerInstance, work, forced ){
 
-        if (Math.random() < 0.001)
+        const time = new Date().getTime();
+
+        if (Math.random() < 0.0005)
             console.log("pushWorkForValidation", work);
 
         try{
@@ -45,11 +47,8 @@ class PoolWorkValidation{
             if (!work.hash) return;
 
             work.hashHex = work.hash.toString("hex");
-
-            if ( this._worksDuplicate[work.hashHex] )
+            if ( this._worksDuplicate[work.hashHex] >= time )
                 return;
-
-            this._worksDuplicate [ work.hashHex ] = new Date().getTime();
 
             let isPOS = BlockchainGenesis.isPoSActivated(work.h);
 
@@ -63,7 +62,7 @@ class PoolWorkValidation{
 
             }
 
-            minerInstance.dateActivity = new Date().getTime() / 1000;
+            minerInstance.dateActivity = time / 1000;
 
             let workData = {
                 hashHex: work.hashHex,
@@ -72,6 +71,7 @@ class PoolWorkValidation{
             };
 
 
+            let timeToBan;
             if (isPOS) {
 
                 //avoid validating not signed POS
@@ -79,13 +79,24 @@ class PoolWorkValidation{
                     return;
 
                 forced = true;
+                timeToBan = 1000;
+            } else { //POW
+
+                timeToBan = 180000;
             }
+
+            this._worksDuplicate [ work.hashHex ] = time + timeToBan;
 
             if ( work.result || forced  ){
 
-                await this._validateWork(workData);
+                const out = await this._validateWork(workData);
+
+                //marking the POS as a validated already solution
+                if (isPOS && out && out.result)
+                    this._worksDuplicate [ work.hashHex ] = time + 180000;
 
             } else {
+
 
                 this.addWork(workData);
 
@@ -113,7 +124,7 @@ class PoolWorkValidation{
 
         if (this.poolManagement.blockchain.semaphoreProcessing._list.length === 0 ) {
 
-            let index = -1;
+            let index = 0;
 
             let n = Math.min(PROCESS_COUNT, this._worksLength);
 
@@ -125,12 +136,10 @@ class PoolWorkValidation{
 
                 }
 
-                this._works[key] = undefined;
                 delete this._works[key];
 
                 index++;
-                if (index > n)
-                    break;
+                if (index > n) break;
             }
 
             this._worksLength -= n;
@@ -146,7 +155,7 @@ class PoolWorkValidation{
         let prevBlock = this.poolWorkManagement.poolWork.findBlockById( work.work.id, work.work.height );
 
         if ( prevBlock )
-            await this.poolWorkManagement.processWork( work.minerInstance, work.work, prevBlock );
+            return this.poolWorkManagement.processWork( work.minerInstance, work.work, prevBlock );
         else
             Log.error("_validateWork didn't work as the block " + work.work.id + " was not found", Log.LOG_TYPE.POOLS, work.work );
 
@@ -159,9 +168,8 @@ class PoolWorkValidation{
             let time = new Date().getTime();
 
             for (let key in this._worksDuplicate)
-                if ( time - this._worksDuplicate[key] > 180000 ){
+                if ( time - this._worksDuplicate[key] >= 0 )
                     delete this._worksDuplicate[key];
-                }
 
         } catch (exception){
 

@@ -110,7 +110,7 @@ class TransactionsDownloadManager{
 
         for (let txId in this._transactionsQueue){
 
-            if( ! await this.blockchain.mining.miningTransactionSelector.validateTransactionId(txId)){
+            if( await this.blockchain.mining.miningTransactionSelector.validateTransactionId(txId) === false){
                 this.removeTransaction(txId);
                 continue;
             }
@@ -129,7 +129,7 @@ class TransactionsDownloadManager{
                     if( this._transactionsQueue[txId].fails <= 2 ){
 
                         //Check if tx has socket and is still valid
-                        if ( this._transactionsQueue[txId].socket !== undefined )
+                        if ( this._transactionsQueue[txId].socket )
                             return {id:txId };
                         else
                             this.removeTransaction(txId);
@@ -179,7 +179,7 @@ class TransactionsDownloadManager{
         }else{
 
             if(topPriority)
-                if(typeof this._transactionsQueue[txId] !== "undefined")
+                if(this._transactionsQueue[txId] )
                     this._transactionsQueue[txId].fails=0;
 
             //Add socket in tx socketsList if is from different socket
@@ -387,7 +387,7 @@ class TransactionsDownloadManager{
 
             transaction = this.blockchain.transactions._createTransactionFromBuffer( buffer ).transaction;
 
-            if (! await this.blockchain.mining.miningTransactionSelector.validateTransaction(transaction))
+            if ( await this.blockchain.mining.miningTransactionSelector.validateTransaction(transaction) === false)
                 throw {message: "Transsaction validation failed"};
 
             var blockValidationType = {};

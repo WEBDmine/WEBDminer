@@ -37,7 +37,6 @@ class PoolWorkManagement{
         this.poolWork.stopGarbageCollector();
     }
 
-
     async getWork(minerInstance,  blockInformationMinerInstance){
 
         if ( !minerInstance ) throw {message: "minerInstance is undefined"};
@@ -50,7 +49,6 @@ class PoolWorkManagement{
 
         await this.poolWork.lastBlockPromise; //it's a promise, let's wait
 
-        //if ( !this.poolWork.lastBlock || ( this.poolWork.lastBlockNonce + hashes ) > 0xFFFFFFFF  || ( this.poolWork.lastBlock.timeStamp + BlockchainGenesis.timeStampOffset < (new Date().getTime()/1000 - 300) ) )
         if ( !this.poolWork.lastBlock || ( this.poolWork.lastBlockNonce + hashes ) > 0xFFFFFFFF  )
             await this.poolWork.getNextBlockForWork();
         else if (!this.blockchain.semaphoreProcessing.processing && ( this.poolWork.lastBlock.height !==  this.blockchain.blocks.length || !this.poolWork.lastBlock.hashPrev.equals( this.blockchain.blocks.last.hash )))
@@ -68,7 +66,9 @@ class PoolWorkManagement{
             balances = [];
 
             for (let i=0; i < minerInstance.addresses.length; i++)
-                balances.push( await this._getMinerBalance( minerInstance.addresses[i] ));
+                balances.push( this._getMinerBalance(minerInstance.addresses[i]) );
+
+            balances = await Promise.all(balances);
 
         }
 
@@ -79,7 +79,7 @@ class PoolWorkManagement{
             t: this.poolWork.lastBlock.difficultyTargetPrev,
             s: this.poolWork.lastBlockSerialization,
             I: this.poolWork.lastBlockId,
-            m: await this.blockchain.blocks.timestampBlocks.getMedianTimestamp( this.poolWork.lastBlock.height, this.poolWork.lastBlock.blockValidation),
+            m: this.poolWork.lastBlock.timeStamp,
 
             start: isPOS ? 0 : this.poolWork.lastBlockNonce,
             end: isPOS ? 0 : (this.poolWork.lastBlockNonce + hashes),
@@ -164,10 +164,9 @@ class PoolWorkManagement{
             }
 
             //returning false, because a new fork was changed in the mean while
-            if ( !isPos && this.blockchain.blocks.length-3 > prevBlock.height+1 )
-                throw {message: "pool: block is already too old"};
+            let blocksDifference = isPos ? 5 : 3;
 
-            if ( isPos && this.blockchain.blocks.length-3 > prevBlock.height+1 )
+            if ( this.blockchain.blocks.length - blocksDifference > prevBlock.height+1 )
                 throw {message: "pool: block is already too old"};
 
             if ( work.result  ) { //it is a solution and prevBlock is undefined
@@ -185,11 +184,9 @@ class PoolWorkManagement{
 
                 if ( wasBlockMined ){
 
-                    console.warn("----------------------------------------------------------------------------");
-                    console.warn("----------------------------------------------------------------------------");
-                    console.warn("WebDollar Block was mined in Pool 2 ", prevBlock.height, " nonce (", work.nonce + ")", work.hash.toString("hex"), " reward", (prevBlock.reward / WebDollarCoins.WEBD), "WEBD", prevBlock.data.minerAddress.toString("hex"));
-                    console.warn("----------------------------------------------------------------------------");
-                    console.warn("----------------------------------------------------------------------------");
+                    console.warn("POOL: A block could be mined", prevBlock.height, " nonce (", work.nonce + ")", work.hash.toString("hex"), prevBlock.data.minerAddress.toString("hex") );
+
+                    this.blockchain.mining.timeMinedBlock = new Date().getTime();
 
                     prevBlock.hash = work.hash;
                     prevBlock.nonce = work.nonce;
@@ -202,7 +199,17 @@ class PoolWorkManagement{
                         prevBlock.posMinerPublicKey = work.pos.posMinerPublicKey;
                         prevBlock.timeStamp = work.pos.timestamp;
 
-                        await prevBlock._validateBlockTimeStamp();
+                        try{
+
+                            await prevBlock._validateBlockTimeStamp();
+
+                        }catch(exception){
+
+                            console.error("POOL: block timestamp raised an error", exception);
+                            throw exception;
+                        }
+
+                        console.warn("POOL: A block passed timestamp validation", prevBlock.height);
 
                     }
 
@@ -235,6 +242,12 @@ class PoolWorkManagement{
                         //confirming transactions
                         await block.data.transactions.confirmTransactions(block.height);
 
+                        console.warn("----------------------------------------------------------------------------");
+                        console.warn("----------------------------------------------------------------------------");
+                        console.warn("WebDollar Block was mined in Pool 2 ", prevBlock.height, " nonce (", work.nonce + ")", work.hash.toString("hex"), " reward", (prevBlock.reward / WebDollarCoins.WEBD), "WEBD", prevBlock.data.minerAddress.toString("hex"));
+                        console.warn("----------------------------------------------------------------------------");
+                        console.warn("----------------------------------------------------------------------------");
+
                         let blockInformation = blockInformationMinerInstance.blockInformation;
 
                         try {
@@ -252,7 +265,6 @@ class PoolWorkManagement{
 
                         console.error("PoolWork include raised an exception", exception);
                         await revertActions.revertOperations();
-
 
                     }
 
@@ -342,12 +354,17 @@ class PoolWorkManagement{
 
         //must be reverted
         //console.log("2 Before Balance ", balance); let s = "";
-        for (let i = prevBlock.height-1; i >= 0 && i >= prevBlock.height -1 - consts.BLOCKCHAIN.POS.MINIMUM_POS_TRANSFERS; i--  ) {
 
-            let block = await this.blockchain.getBlock( i );
+        let blocks = [], end = Math.max( 0, prevBlock.height -1 - consts.BLOCKCHAIN.POS.MINIMUM_POS_TRANSFERS);
+
+        for (let i = prevBlock.height-1; i >= end; i--  )
+            blocks.push( this.blockchain.getBlock( i ) );
+
+        blocks = await Promise.all( blocks );
+
+        for (let block of blocks){
+
             if (!block) continue;
-
-            //s += block.height + " ";
 
             for (let tx of block.data.transactions.transactions ) {
 
@@ -361,11 +378,9 @@ class PoolWorkManagement{
 
             }
 
-
         }
 
         //console.log("2 After Balance ", balance, s);
-
         return balance;
 
     }

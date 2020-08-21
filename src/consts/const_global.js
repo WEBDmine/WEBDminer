@@ -197,7 +197,6 @@ consts.HASH_ARGON2_PARAMS = {
     algoNode: 0,
     algoBrowser: 0,
     hashLen: 32,
-    
 };
 
 // change also to Browser-Mining-WebWorker.js
@@ -535,6 +534,7 @@ if ( consts.DEBUG === true ) {
 
     FallBackNodesList.nodes = [{
         "addr": ["http://testnet2.hoste.ro:8001"],
+        "addr": ["http://86.126.138.61:2024"],
     }];
 
 

@@ -42,20 +42,19 @@ class RevertActions {
                 }
                 else if (action.name === "block-added" && (actionName === '' || actionName === action.name)) {
 
-                    await this.blockchain.blocks.spliceBlocks(action.height, true);
+                    await this.blockchain.blocks.spliceBlocks(action.height, true, undefined, true);
 
                     if (this.blockchain.agent.light) {
                         this.blockchain.lightPrevHashPrevs.splice(action.height);
                         this.blockchain.lightPrevTimeStamps.splice(action.height);
                         this.blockchain.lightPrevDifficultyTargets.splice(action.height);
 
-                        let block = await this.blockchain.getBlock(action.height-1);
+                        let block = await this.blockchain.getBlock(action.height - 1);
                         this.blockchain.lightPrevHashPrevs[action.height] = block.hash;
                         this.blockchain.lightPrevTimeStamps[action.height] = block.timeStamp;
                         this.blockchain.lightPrevDifficultyTargets[action.height] = block.difficultyTarget;
 
                     }
-
                 } else if (action.name === "breakpoint" && (actionName === '' || actionName === action.name)) {
 
                     this._actions.splice(i, 1);

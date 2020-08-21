@@ -7,7 +7,9 @@ import Blockchain from "main-blockchain/Blockchain"
 import NODE_TYPE from "../types/Node-Type";
 import BlockchainGenesis from 'common/blockchain/global/Blockchain-Genesis'
 import BansList from "common/utils/bans/BansList";
+import AddressBanList from "common/utils/bans/AddressBanList";
 import WebDollarCoins from "common/utils/coins/WebDollar-Coins"
+import Utils from "common/utils/helpers/Utils";
 
 class NodesStats {
 
@@ -39,6 +41,11 @@ class NodesStats {
         console.info(" blocks: ", Blockchain.blockchain.blocks.length, BlockchainGenesis.isPoSActivated(Blockchain.blockchain.blocks.length) ? "POS" : "POW" );
         console.info(" amount mining wallet: ", Blockchain.AccountantTree.getBalance( Blockchain.blockchain.mining.minerAddress  ) / WebDollarCoins.WEBD, "  amount");
 
+        if (Blockchain.blockchain.mining.timeMinedBlock) {
+            let time = Utils.timePassed(Blockchain.blockchain.mining.timeMinedBlock);
+            console.info(`time since block mined ${Math.floor(time.d)} d ${Math.floor(time.h)} h ${Math.floor(time.m)} m`);
+        }
+
         try {
             if (Blockchain.blockchain.mining.minerAddress && Buffer.isBuffer(Blockchain.blockchain.mining.unencodedMinerAddress))
                 console.info("Exists: ", Blockchain.Wallet.getAddress({unencodedAddress: Blockchain.blockchain.mining.unencodedMinerAddress}) !== null ? "YES" : "NO");
@@ -47,12 +54,9 @@ class NodesStats {
         }
 
         console.info(" v: ", consts.SETTINGS.NODE.VERSION);
-        let now = Math.floor( (new Date().getTime() - this._timeStart)/60000);
-        let m = now % 60;  now = now / 60;
-        let h = now % 24;  now = now / 24;
-        let d = now % 30; now = now / 30;
 
-        console.info( `up time ${Math.floor(d) } d ${Math.floor(h) } h ${ Math.floor(m) } m` );
+        let time = Utils.timePassed(this._timeStart);
+        console.info( `up time ${Math.floor(time.d) } d ${Math.floor(time.h) } h ${ Math.floor(time.m) } m` );
 
         console.log(" connected to: ", this.statsClients," , from: ", this.statsServer , " web peers WEBRTC", this.statsWebPeers," Network FullNodes:",this.statsWaitlistFullNodes, " Network LightNodes:",this.statsWaitlistLightNodes, "    GeoLocationContinents: ", GeoLocationLists.countGeoLocationContinentsLists );
         console.log(" browsers: ", this.statsBrowsers, " terminal: ", this.statsTerminal);
@@ -96,7 +100,7 @@ class NodesStats {
         console.log("waitlist light node ", NodesWaitlist.waitListLightNodes.length);
 
         BansList.listBans();
-
+        AddressBanList.listBans();
     }
 
     _recalculateStats(nodesListObject, printStats = true){
