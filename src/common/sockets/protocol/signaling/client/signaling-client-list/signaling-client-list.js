@@ -35,7 +35,7 @@ class SignalingClientList {
 
         let signalingClientPeerObject = this.searchWebPeerSignalingClientList(signalInitiator, signalAnswer, uuid);
 
-        if (signalingClientPeerObject === null){
+        if ( !signalingClientPeerObject ){
 
             let webPeer = new NodeWebPeerRTC();
             signalingClientPeerObject = new SignalingClientPeerObject(webPeer, uuid, signalingClientType);
@@ -51,15 +51,15 @@ class SignalingClientList {
 
         //previous established connection
         for (let i = 0; i < this.connected.length; i++)
-            if (this.connected[i].webPeer.peer !== null && this.connected[i].webPeer.peer !== undefined ) {
+            if (this.connected[i].webPeer.peer && this.connected[i].webPeer.peer ) {
 
-                if ( signalInitiator !== undefined && JSON.stringify(this.connected[i].webPeer.peer.signalInitiatorData) === JSON.stringify(signalInitiator))
+                if ( signalInitiator && JSON.stringify(this.connected[i].webPeer.peer.signalInitiatorData) === JSON.stringify(signalInitiator))
                     return i;
 
-                if ( signalAnswer !== undefined && JSON.stringify(this.connected[i].webPeer.peer.signalData) === JSON.stringify(signalAnswer))
+                if ( signalAnswer && JSON.stringify(this.connected[i].webPeer.peer.signalData) === JSON.stringify(signalAnswer))
                     return i;
 
-                if ( uuid !== undefined && this.connected[i].uuid === uuid)
+                if ( uuid && this.connected[i].uuid === uuid)
                     return i;
 
             }

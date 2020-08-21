@@ -233,7 +233,6 @@ class InterfaceSatoshminDB {
             let deletion = await this._deleteDocumentAttachment(key);
             return deletion;
         } catch (err) {
-            //console.error("_deleteDocumentAttachmentIfExist raised an error", err);
             return false;
         }
     }
