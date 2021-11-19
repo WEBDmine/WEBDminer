@@ -65,10 +65,6 @@ class MiningTransactionsSelector{
         if( transaction.timeLock - consts.BLOCKCHAIN.FORKS.IMMUTABILITY_LENGTH/2 > this.blockchain.blocks.length )
             throw {message: "transaction is in future"};
 
-        //validating its own transaction
-        if (transaction.from.addresses[0].unencodedAddress.equals( this.blockchain.mining.unencodedMinerAddress ) )
-            return true;
-
         //verify fee
         if (transaction.fee < this.blockchain.transactions.wizard.calculateFeeWizzard( transaction.serializeTransaction(), miningFeePerByte ) )
             throw {message: "fee is too small"};
@@ -155,6 +151,8 @@ class MiningTransactionsSelector{
                     ; //to nothing
 
             } catch (exception){
+
+                console.warn('Error Including Transaction', exception);
 
             }
 

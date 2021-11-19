@@ -32,7 +32,7 @@ class MinerPoolSettings {
         this.poolWebsite = "";
         this.poolDescription = "";
         this.poolServers = [];
-        this.poolPublicKey = new Buffer(0);
+        this.poolPublicKey = Buffer.alloc(0);
         this.poolUseSignatures = false;
         this.poolURLReferral = '';
 
@@ -181,7 +181,7 @@ class MinerPoolSettings {
         for (let key in this.poolsList)
             list[key] = this.poolsList[key];
 
-        let result = await this._db.save("minerPool_poolsList", new Buffer( JSON.stringify( list ), "ascii") );
+        let result = await this._db.save("minerPool_poolsList",  Buffer.from( JSON.stringify( list ), "ascii") );
         return result;
 
     }
@@ -229,7 +229,7 @@ class MinerPoolSettings {
 
     async _addPoolsList(){
 
-        await this.addPoolList("/pool/1/BACMpool/0.01/21dc1f57cb7338963ea159877b4ade97b71dd11ac17292e3852bdc33a26a17e4/https:$$pool.bacm.ro:443", undefined, true);
+        await this.addPoolList("/pool/1/LOFT/0.01/777b64f4425cf319cd6f178d890178e6c5d5d367d65f100a3c8d71d815fef0d4/https:$$pool.maison:8443", undefined, true);
 
     }
 

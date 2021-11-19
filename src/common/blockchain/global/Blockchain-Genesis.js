@@ -5,7 +5,7 @@ class BlockchainGenesis{
 
     constructor(){
 
-        this.hashPrev = new Buffer("731D46C131EB6DD4667A96BDC27BAF9223BEC72C3468DFB6BA52C460E76423A4", "hex"); //main net
+        this.hashPrev = Buffer.from("731D46C131EB6DD4667A96BDC27BAF9223BEC72C3468DFB6BA52C460E76423A4", "hex"); //main net
 
         this.timeStamp = 0;
 
@@ -14,8 +14,8 @@ class BlockchainGenesis{
         else
             this.timeStampOffset = 1529344475; //test net
 
-        this.difficultyTarget = new Buffer ( "00029112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb", "hex" ); //hard difficulty
-        this.difficultyTargetPOS = new Buffer ( "00000000000006ece3173c784c7d4871c061a1f20eca8f33aa76fb15846e0c13", "hex" ); //smallest difficulty
+        this.difficultyTarget = Buffer.from ( "00029112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb", "hex" ); //hard difficulty
+        this.difficultyTargetPOS = Buffer.from ( "00000000000006ece3173c784c7d4871c061a1f20eca8f33aa76fb15846e0c13", "hex" ); //smallest difficulty
 
         this.address = BufferExtended.fromBase("WEBD$gBzsiV+$FARK8qSGqs09V6AEDBi#@fP6n7$"); // genesis address
 
@@ -42,10 +42,11 @@ class BlockchainGenesis{
         if (typeof height === "string") height = Number.parseInt(height);
 
         // no pos activated
-        if (height < consts.BLOCKCHAIN.HARD_FORKS.POS_ACTIVATION) return 0;
+        if (height < consts.BLOCKCHAIN.HARD_FORKS.POS_ACTIVATION) return 0; // NO POS
+        if (height < consts.BLOCKCHAIN.HARD_FORKS.POS90_ACTIVATION) return 30; // 66% POS
+        if (height < consts.BLOCKCHAIN.HARD_FORKS.POS100_ACTIVATION) return 100; // 90% POS
+        return 0; // 100% POS
 
-        if (height < consts.BLOCKCHAIN.HARD_FORKS.POS90_ACTIVATION) return 30;
-        else return 100;
     }
 
     isPoSActivated(height){
@@ -61,13 +62,12 @@ class BlockchainGenesis{
 
             //0..19  pos
             //20..29 pow
-            if ( height % 30 < 20) return true;
-            else return false;
+            return height % 30 < 20;
 
             //29,0..19  pos
             //20..29 pow
 
-        } else {
+        } else  if (height < consts.BLOCKCHAIN.HARD_FORKS.POS100_ACTIVATION) { // pos 90% activated
 
             //0..9 pos          -10%
             //9..19 pos         -10%
@@ -85,12 +85,10 @@ class BlockchainGenesis{
             // pos = 90 / 100
             // pow = 10 / 100
 
-            if (height % 100 < 90) return true;
-            else return false;
+            return height % 100 < 90;
 
-        }
-
-
+        } else
+            return true; // pos 100%
 
     }
 
